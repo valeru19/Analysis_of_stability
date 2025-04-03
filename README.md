@@ -390,4 +390,8 @@ crack --> data
 @enduml
 ```
 
+![Снимок экрана 2025-04-03 190124](https://github.com/user-attachments/assets/c51dccaf-966b-4b9d-8979-d8c6dea8d606)
+
+![Editor _ Mermaid Chart-2025-04-03-135930](https://github.com/user-attachments/assets/5bc3602d-a379-4b80-8c0e-e4028935de18)
+
 
