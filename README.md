@@ -192,3 +192,202 @@ CombinedPasswordSystem --> PasswordCracker
 AuthenticationSystem --> User
 
 @enduml
+# Комбинированная система анализа и подбора паролей - Полная документация
+
+## Оглавление
+- [Введение](#введение)
+- [Архитектура системы](#архитектура-системы)
+- [Подробное описание функционала](#подробное-описание-функционала)
+- [Технические аспекты реализации](#технические-аспекты-реализации)
+- [Руководство пользователя](#руководство-пользователя)
+- [Руководство администратора](#руководство-администратора)
+- [Безопасность и ограничения](#безопасность-и-ограничения)
+- [Производительность](#производительность)
+- [Дополнительные возможности](#дополнительные-возможности)
+- [Часто задаваемые вопросы](#часто-задаваемые-вопросы)
+- [Разработка и контрибуция](#разработка-и-контрибуция)
+
+---
+
+## Введение
+### Назначение системы
+Комбинированная система анализа и подбора паролей представляет собой учебно-демонстрационное приложение, разработанное для:
+
+- Демонстрации принципов криптостойкости паролей
+- Анализа времени, необходимого для взлома паролей методом перебора
+- Исследования эффективности различных методов подбора паролей
+- Обучения основам информационной безопасности
+
+### Основные концепции
+Система реализует два взаимодополняющих режима:
+- **Аналитический режим** — оценивает стойкость пароля к атакам методом полного перебора
+- **Практический режим** — демонстрирует реальные методы подбора паролей на тестовой системе аутентификации
+
+## Архитектура системы
+### Компонентная диаграмма
+```plaintext
++-----------------------+
+|     GUI Layer        |
+| (CombinedPasswordSystem) |
++-----------------------+
+           |
+           v
++-----------------------+
+|   Business Logic     |
+| 1. AuthenticationSystem |
+| 2. PasswordStrengthAnalyzer |
+| 3. PasswordCracker    |
++-----------------------+
+           |
+           v
++-----------------------+
+|   Data Layer         |
+| 1. User/Admin models |
+| 2. Dictionary files  |
+| 3. Configuration     |
++-----------------------+
+```
+
+## UML-диаграммы
+### 1. Диаграмма классов
+```plantuml
+@startuml
+class CombinedPasswordSystem {
+  -authSystem: AuthenticationSystem
+  -strengthAnalyzer: PasswordStrengthAnalyzer
+  -passwordCracker: PasswordCracker
+  +main(args: String[]): void
+}
+
+class AuthenticationSystem {
+  -users: List<User>
+  -dataFile: String
+  +addUser(username: String): void
+  +blockUser(username: String): void
+  +findUser(username: String): User
+  +saveUsers(): void
+  +loadUsers(): List<User>
+}
+
+class PasswordStrengthAnalyzer {
+  +analyzePassword(password: String, speed: double, attempts: int, pause: double): String
+  -calculateAlphabetSize(password: String): int
+  -calculateCombinations(N: int, L: int): BigInteger
+  -estimateCrackingTime(M: BigInteger, speed: double, m: int, v: double): String
+}
+
+class PasswordCracker {
+  -authSystem: AuthenticationSystem
+  -russianToLatinMap: Map<Character, Character>
+  -dictionary: List<String>
+  +dictionaryAttack(username: String): String
+  +bruteForceAttack(username: String, maxLength: int): String
+  +combinedAttack(username: String, maxLength: int): String
+  -convertRussianToLatin(russianWord: String): String
+  -incrementChars(chars: char[]): boolean
+}
+
+class User {
+  -username: String
+  -password: String
+  -isBlocked: boolean
+  -passwordRestrictions: boolean
+  -failedAttempts: int
+  -minLength: int
+  -maxLength: int
+  -minDigits: int
+  -minSpecials: int
+  +login(password: String): boolean
+  +isPasswordValid(password: String): boolean
+}
+
+class Admin {
+  +toString(): String
+}
+
+CombinedPasswordSystem --> AuthenticationSystem
+CombinedPasswordSystem --> PasswordStrengthAnalyzer
+CombinedPasswordSystem --> PasswordCracker
+AuthenticationSystem --> User
+User <|-- Admin
+PasswordCracker --> AuthenticationSystem
+@enduml
+```
+
+### 2. Диаграмма последовательностей - Анализ пароля
+```plantuml
+@startuml
+actor User
+participant GUI
+participant PasswordStrengthAnalyzer
+participant "BigInteger/BigDecimal" as Math
+
+User -> GUI: Вводит пароль и параметры
+GUI -> PasswordStrengthAnalyzer: analyzePassword(password, speed, attempts, pause)
+PasswordStrengthAnalyzer -> PasswordStrengthAnalyzer: calculateAlphabetSize()
+PasswordStrengthAnalyzer -> PasswordStrengthAnalyzer: calculateCombinations()
+PasswordStrengthAnalyzer -> Math: Вычисления
+Math --> PasswordStrengthAnalyzer: Результаты
+PasswordStrengthAnalyzer -> PasswordStrengthAnalyzer: estimateCrackingTime()
+PasswordStrengthAnalyzer --> GUI: Отчет о стойкости
+GUI --> User: Отображает результаты
+@enduml
+```
+
+### 3. Диаграмма вариантов использования
+```plantuml
+@startuml
+left to right direction
+actor Пользователь
+actor Администратор
+
+rectangle Система {
+  Пользователь --> (Анализ стойкости пароля)
+  Пользователь --> (Регистрация)
+  Пользователь --> (Смена пароля)
+  
+  Администратор --> (Управление пользователями)
+  Администратор --> (Настройка политик)
+  Администратор --> (Подбор паролей)
+  Администратор --> (Просмотр статистики)
+}
+
+(Управление пользователями) .> (Блокировка пользователей) : includes
+(Управление пользователями) .> (Просмотр списка) : includes
+@enduml
+```
+
+### 4. Диаграмма состояний - Пользователь
+```plantuml
+@startuml
+[*] --> Неактивный
+Неактивный --> Зарегистрированный: Регистрация
+Зарегистрированный --> Аутентифицированный: Успешный вход
+Аутентифицированный --> Зарегистрированный: Выход
+Зарегистрированный --> Заблокированный: 3 неудачных попытки
+Заблокированный --> [*] : Сброс администратором
+@enduml
+```
+
+### 5. Диаграмма компонентов
+```plantuml
+@startuml
+package "Комбинированная система паролей" {
+  [GUI] as gui
+  [Authentication Module] as auth
+  [Password Analysis] as analysis
+  [Password Cracking] as crack
+  [Data Storage] as data
+}
+
+gui --> auth
+gui --> analysis
+gui --> crack
+auth --> data
+analysis --> data
+crack --> auth
+crack --> data
+@enduml
+```
+
+
